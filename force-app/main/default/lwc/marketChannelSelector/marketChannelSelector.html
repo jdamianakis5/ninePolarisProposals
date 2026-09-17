@@ -1,0 +1,35 @@
+<template>
+    <div class="selector-card">
+        <div class="selector-header">
+            <button type="button" class="chevron-button" onclick={handleToggleOpen}>{chevron}</button>
+            <h3 class="selector-title">Markets and Channels</h3>
+            <span class="summary-badge">{summaryText}</span>
+        </div>
+
+        <template lwc:if={open}>
+            <div class="selector-body">
+                <c-market-channel-picker
+                    markets={markets}
+                    channels={channels}
+                    selected-pairs={selectedPairs}
+                    disabled={disabled}
+                    onselectionchange={handleSelectionChange}>
+                </c-market-channel-picker>
+            </div>
+        </template>
+
+        <div class="selection-summary">
+            <template lwc:if={hasSelection}>
+                <template for:each={summaryGroups} for:item="group">
+                    <div key={group.key} class="summary-row">
+                        <span class="summary-market">{group.label}</span>
+                        <span class="summary-channels">{group.channels}</span>
+                    </div>
+                </template>
+            </template>
+            <template lwc:else>
+                <p class="summary-empty">No markets or channels selected yet.</p>
+            </template>
+        </div>
+    </div>
+</template>

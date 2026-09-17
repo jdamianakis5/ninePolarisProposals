@@ -1,0 +1,68 @@
+<template>
+    <div class="split-details">
+        <div class="slds-grid header-row">
+            <span class="name-col">{dimHeaderLabel}</span>
+            <template for:each={effectiveColumns} for:item="col">
+                <span key={col.id} class="cell-col">{col.label}</span>
+            </template>
+            <span class="total-col">Total</span>
+        </div>
+
+        <template for:each={displayRows} for:item="row">
+            <div key={row.key} class={row.rowClass}>
+                <span class="name-col" style={row.indentStyle}>
+                    <template lwc:if={row.isOverall}>
+                        <span class="row-checkbox-spacer"></span>
+                    </template>
+                    <template lwc:else>
+                        <button type="button" class="row-checkbox" data-rowkey={row.key} disabled={disabled} onclick={handleRowSelect}>
+                            <template lwc:if={row.selected}>✓</template>
+                        </button>
+                    </template>
+                    <template lwc:if={row.hasChildren}>
+                        <button type="button" class="row-chevron" data-rowkey={row.key} onclick={handleToggleCollapse}>{row.chevron}</button>
+                    </template>
+                    <template lwc:if={row.grouped}>
+                        <span class="grouped-badge" title="Grouped rows">⧉</span>
+                    </template>
+                    <span class="row-label">{row.label}</span>
+                </span>
+
+                <template for:each={row.cells} for:item="cell">
+                    <span key={cell.key} class="cell-col">
+                        <template lwc:if={cell.editable}>
+                            <input
+                                type="text"
+                                inputmode="decimal"
+                                class="cell-input"
+                                value={cell.value}
+                                data-rowkey={row.key}
+                                data-colid={cell.colId}
+                                disabled={disabled}
+                                onchange={handleCellChange}>
+                        </template>
+                        <template lwc:else>
+                            <span class="cell-readonly">{cell.display}</span>
+                        </template>
+                    </span>
+                </template>
+
+                <span class="total-col">
+                    <template lwc:if={row.showTotalInput}>
+                        <input
+                            type="text"
+                            inputmode="decimal"
+                            class="cell-input"
+                            placeholder="Fixed total"
+                            value={row.totalValue}
+                            disabled={disabled}
+                            onchange={handleTotalChange}>
+                    </template>
+                    <template lwc:else>
+                        <span class="cell-readonly">{row.rowTotal}</span>
+                    </template>
+                </span>
+            </div>
+        </template>
+    </div>
+</template>

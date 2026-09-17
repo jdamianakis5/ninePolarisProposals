@@ -1,0 +1,36 @@
+<template>
+    <div class="slds-grid slds-grid_vertical-align-center split-actions">
+        <span class="selection-label">{selectionLabel}</span>
+        <span class="divider"></span>
+
+        <span class="slds-is-relative menu-anchor">
+            <button type="button" class="icon-button" disabled={disableCopy} title="Copy" onclick={handleCopy}>⧉</button>
+            <button type="button" class="icon-button icon-button_caret" title="Copy options" onclick={handleToggleCopyMenu}>▾</button>
+            <template lwc:if={copyMenuOpen}>
+                <div class="menu">
+                    <button type="button" class="menu-item" onclick={handleCopyToAllLevels}>Copy to All Levels</button>
+                    <button type="button" class="menu-item" onclick={handleCopyToAllColumns}>{copyColumnsLabel}</button>
+                </div>
+            </template>
+        </span>
+
+        <button type="button" class="icon-button" disabled={disablePaste} title="Paste" onclick={handlePaste}>📋</button>
+        <span class="divider"></span>
+
+        <button type="button" class="icon-button" disabled={disableGroup} title="Group" onclick={handleGroup}>⊞</button>
+        <button type="button" class="icon-button" disabled={disableUngroup} title="Ungroup" onclick={handleUngroup}>⊟</button>
+        <span class="divider"></span>
+
+        <button type="button" class="icon-button" title="Apply even split" onclick={handleEven}>≡</button>
+
+        <span class="slds-is-relative menu-anchor">
+            <button type="button" class="icon-button" disabled={disableClear} title="Clear values" onclick={handleClear}>✕</button>
+            <button type="button" class="icon-button icon-button_caret" title="Clear options" onclick={handleToggleClearMenu}>▾</button>
+            <template lwc:if={clearMenuOpen}>
+                <div class="menu">
+                    <button type="button" class="menu-item" onclick={handleClearAll}>Clear All</button>
+                </div>
+            </template>
+        </span>
+    </div>
+</template>

@@ -1,0 +1,69 @@
+<template>
+    <div class="split-configurator">
+        <div class="goal-row">
+            <template for:each={goalToggles} for:item="goal">
+                <div key={goal.key} class="goal-toggle">
+                    <lightning-input
+                        type="toggle"
+                        label={goal.label}
+                        checked={goal.on}
+                        disabled={disabled}
+                        data-key={goal.key}
+                        onchange={handleGoalToggle}>
+                    </lightning-input>
+                    <template lwc:if={goal.showSubChoice}>
+                        <div class="sub-choice">
+                            <template for:each={goal.subOptions} for:item="opt">
+                                <button
+                                    key={opt.value}
+                                    type="button"
+                                    class="sub-choice-pill"
+                                    aria-pressed={opt.selected}
+                                    data-value={opt.value}
+                                    data-key={goal.key}
+                                    onclick={handleSubChoiceClick}>{opt.value}</button>
+                            </template>
+                        </div>
+                    </template>
+                </div>
+            </template>
+        </div>
+
+        <div class="metric-row">
+            <template for:each={metricPills} for:item="pill">
+                <button key={pill.metric} type="button" class="metric-pill" data-metric={pill.metric} disabled={disabled} onclick={handleAddSplit}>{pill.label}</button>
+            </template>
+        </div>
+
+        <div class="split-list">
+            <template for:each={splitViews} for:item="split">
+                <c-split
+                    key={split.id}
+                    id={split.id}
+                    title={split.title}
+                    metric={split.metric}
+                    unit={split.unit}
+                    allow-percent={split.allowPercent}
+                    dims={split.dims}
+                    column-driver={split.columnDriver}
+                    breakouts={split.breakouts}
+                    total={split.total}
+                    values={split.values}
+                    groups={split.groups}
+                    open={split.open}
+                    required={split.required}
+                    disabled={disabled}
+                    dimension-catalog={split.dimensionCatalog}
+                    dimension-option-counts={dimensionOptionCounts}
+                    dimension-options={dimensionOptions}
+                    dimension-labels={dimensionLabels}
+                    week-columns={availableWeeks}
+                    burst-columns={availableBursts}
+                    fixed-only={fixedOnly}
+                    onsplitchange={handleSplitChange}
+                    onsplitremove={handleSplitRemove}>
+                </c-split>
+            </template>
+        </div>
+    </div>
+</template>

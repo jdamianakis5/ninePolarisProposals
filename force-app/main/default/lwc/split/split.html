@@ -1,0 +1,123 @@
+<template>
+    <div class="split-card">
+        <div class="split-header">
+            <button type="button" class="chevron-button" onclick={handleToggleOpen}>{chevron}</button>
+            <span class="split-title">{title}</span>
+            <span class="split-dim-label">{dimLabel}</span>
+            <span class="split-header-actions">
+                <button type="button" class="icon-button" title="Grouping dimensions" onclick={handleToggleSettings}>⚙</button>
+                <button type="button" class="icon-button" title="Enforce for breakouts" onclick={handleToggleBreakouts}>🛡</button>
+                <button type="button" class="icon-button icon-button_danger" disabled={required} title="Remove split" onclick={handleRemove}>🗑</button>
+            </span>
+        </div>
+
+        <template lwc:if={breakoutsOpen}>
+            <div class="split-panel">
+                <div class="panel-label">Enforce for Breakouts</div>
+                <template lwc:if={hasBreakoutOptions}>
+                    <template for:each={breakoutOptionRows} for:item="row">
+                        <button key={row.key} type="button" class="checkbox-row" data-key={row.key} onclick={handleToggleBreakout}>
+                            <span class="checkbox-box">
+                                <template lwc:if={row.selected}>✓</template>
+                            </span>
+                            <span>{row.label}</span>
+                        </button>
+                    </template>
+                </template>
+                <template lwc:else>
+                    <p class="panel-empty">Every dimension is already used for grouping, so there is nothing left to enforce across.</p>
+                </template>
+            </div>
+        </template>
+
+        <template lwc:if={settingsOpen}>
+            <div class="split-panel split-panel_grid">
+                <div>
+                    <div class="panel-label">Group by</div>
+                    <template for:each={dimOptionRows} for:item="row">
+                        <button
+                            key={row.key}
+                            type="button"
+                            class="checkbox-row"
+                            data-key={row.key}
+                            disabled={row.disabledRow}
+                            onclick={handleToggleDim}>
+                            <span class="checkbox-box">
+                                <template lwc:if={row.selected}>✓</template>
+                            </span>
+                            <span class="checkbox-label">{row.label}</span>
+                            <span class="checkbox-note">{row.note}</span>
+                        </button>
+                    </template>
+                </div>
+
+                <div>
+                    <div class="panel-label">Level order and unit</div>
+                    <template for:each={levelRows} for:item="row">
+                        <div key={row.key} class="level-row">
+                            <span class="level-rank">{row.rank}</span>
+                            <span class="level-label">{row.label}</span>
+                        </div>
+                    </template>
+                    <div class="unit-row">
+                        <template for:each={unitOptions} for:item="opt">
+                            <button
+                                key={opt.symbol}
+                                type="button"
+                                class="unit-button"
+                                data-symbol={opt.symbol}
+                                aria-pressed={opt.selected}
+                                onclick={handleUnit}>{opt.symbol}</button>
+                        </template>
+                    </div>
+                    <p class="panel-note">Levels follow the order you picked them in Group by. One unit applies to the whole split.</p>
+                </div>
+
+                <div>
+                    <div class="panel-label">Column driver</div>
+                    <button type="button" class="checkbox-row" disabled={weekDisabled} onclick={handleWeek}>
+                        <span class="checkbox-box"><template lwc:if={weekSelected}>✓</template></span>
+                        <span>Split by Week</span>
+                    </button>
+                    <button type="button" class="checkbox-row" disabled={burstDisabled} onclick={handleBurst}>
+                        <span class="checkbox-box"><template lwc:if={burstSelected}>✓</template></span>
+                        <span>Split by Burst</span>
+                    </button>
+                    <p class="panel-note">Only one column driver at a time. The driver sits above the group-by levels.</p>
+                </div>
+            </div>
+        </template>
+
+        <div style={bodyStyle}>
+            <template lwc:if={showRequirementBanner}>
+                <p class="requirement-banner">{requirementBannerText}</p>
+            </template>
+
+            <c-split-actions
+                selection-count={selectedRowKeys.length}
+                can-group={detailsCanGroup}
+                can-ungroup={detailsCanUngroup}
+                has-clipboard={detailsHasClipboard}
+                column-driver={columnDriver}
+                disabled={disabled}
+                onaction={handleAction}>
+            </c-split-actions>
+
+            <c-split-details
+                dims={dims}
+                dimension-options={dimensionOptions}
+                dimension-labels={dimensionLabels}
+                column-driver={columnDriver}
+                columns={columns}
+                unit={unit}
+                total={total}
+                values={values}
+                groups={groups}
+                disabled={disabled}
+                ondetailschange={handleDetailsChange}
+                ontotalchange={handleTotalChange}
+                onrowselectionchange={handleRowSelectionChange}>
+            </c-split-details>
+        </div>
+    </div>
+</template>

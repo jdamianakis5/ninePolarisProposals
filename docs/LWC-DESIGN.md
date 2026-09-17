@@ -1,5 +1,16 @@
 # LWC design: Durations, Dayparts and Bursts
 
+This is one of three LWC design documents in this repo:
+
+- **Durations, Dayparts and Bursts** (this document): `burstsAndCustomDayparts`, `burstPeriods`,
+  `burstPeriod`, `customDayparts`, `customDaypart`, `spotDurationsAndDayparts`, `spotDurations`,
+  `standardDayparts`, `durationPill`, `topTailToggle`, `topTailSetParent`, `topTailSetChild`,
+  `pill`.
+- [Split Creator](LWC-DESIGN-split-creator.md): `splitConfigurator`, `split`, `splitDetails`,
+  `splitActions`.
+- [Market/Channel Picker and Nav Rail Item](LWC-DESIGN-market-channel.md): `marketChannelPicker`,
+  `marketChannelSelector`, `navRailItem`.
+
 Thirteen Lightning Web Components implementing the
 [Technical Design: Durations, Dayparts and Bursts Component](design-handoff/TTP-Technical-Design-Durations-Dayparts-Bursts.pdf)
 (the "TTP"), which is the authoritative source for scope, hierarchy, and validation rules in

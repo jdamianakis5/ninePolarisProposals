@@ -1,0 +1,116 @@
+.split-details {
+    font-size: 0.75rem;
+    overflow-x: auto;
+}
+
+.header-row,
+.split-row {
+    align-items: center;
+    border-bottom: 1px solid var(--slds-g-color-border-base-1, #dddbda);
+}
+
+.header-row {
+    background: #f4f6f8;
+    font-size: 0.65625rem;
+    font-weight: 700;
+    letter-spacing: 0.4px;
+    text-transform: uppercase;
+    color: #3e3e3c;
+}
+
+.name-col {
+    width: 15.625rem;
+    flex: none;
+    display: flex;
+    align-items: center;
+    gap: 0.375rem;
+    padding: 0.4375rem 0.625rem;
+    box-sizing: border-box;
+    min-width: 0;
+}
+
+.cell-col {
+    width: 7.5rem;
+    flex: none;
+    padding: 0.25rem 0.625rem 0.25rem 0;
+    box-sizing: border-box;
+}
+
+.total-col {
+    width: 7.25rem;
+    flex: none;
+    padding: 0.25rem 0.625rem;
+    box-sizing: border-box;
+    text-align: right;
+}
+
+.split-row_selected {
+    background: #eaf5ff;
+}
+
+.split-row_grouped {
+    background: #fff9ec;
+}
+
+.row-checkbox,
+.row-checkbox-spacer {
+    width: 0.875rem;
+    height: 0.875rem;
+    flex: none;
+}
+
+.row-checkbox {
+    border-radius: 3px;
+    border: 1px solid var(--slds-g-color-border-base-4, #c9c9c9);
+    background: #fff;
+    font-size: 0.5625rem;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.row-chevron {
+    width: 0.75rem;
+    flex: none;
+    border: 0;
+    background: none;
+    font-size: 0.625rem;
+    color: #3e3e3c;
+    cursor: pointer;
+}
+
+.grouped-badge {
+    flex: none;
+    width: 1rem;
+    height: 1rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+    background: #ffe9c7;
+    color: #7a4e00;
+    font-size: 0.625rem;
+}
+
+.row-label {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.cell-input {
+    width: 100%;
+    box-sizing: border-box;
+    height: 1.5rem;
+    border: 1px solid var(--slds-g-color-border-base-4, #c9c9c9);
+    border-radius: 4px;
+    padding: 0 0.375rem;
+    font-size: 0.71875rem;
+}
+
+.cell-readonly {
+    font-size: 0.71875rem;
+    font-weight: 600;
+    color: #181818;
+}

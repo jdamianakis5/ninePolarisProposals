@@ -1,0 +1,42 @@
+<template>
+    <div class="picker-grid">
+        <div class="grid-row grid-row_header">
+            <button type="button" class="corner-cell" disabled={disabled} onclick={handleToggleAll}>
+                <template lwc:if={allSelected}>✓</template>
+                <template lwc:else>—</template>
+            </button>
+            <template for:each={columnHeaders} for:item="col">
+                <button key={col.id} type="button" class="header-cell" data-channelid={col.id} disabled={disabled} onclick={handleToggleColumn}>
+                    <span class="header-mark"><template lwc:if={col.allOn}>✓</template></span>
+                    {col.label}
+                </button>
+            </template>
+        </div>
+
+        <template for:each={rows} for:item="row">
+            <div key={row.id} class="row-wrap">
+                <template lwc:if={row.groupLabel}>
+                    <div class="group-header">{row.groupLabel}</div>
+                </template>
+                <div class="grid-row">
+                    <button type="button" class="row-cell" data-marketid={row.id} disabled={disabled} onclick={handleToggleRow}>
+                        <span class="row-mark"><template lwc:if={row.rowAllOn}>✓</template></span>
+                        {row.label}
+                    </button>
+                    <template for:each={row.cells} for:item="cell">
+                        <button
+                            key={cell.key}
+                            type="button"
+                            class="value-cell"
+                            data-key={cell.key}
+                            aria-pressed={cell.on}
+                            disabled={disabled}
+                            onclick={handleToggleCell}>
+                            <template lwc:if={cell.on}>✓</template>
+                        </button>
+                    </template>
+                </div>
+            </div>
+        </template>
+    </div>
+</template>

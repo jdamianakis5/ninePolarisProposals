@@ -5,18 +5,20 @@ proposals), plus the design handoff documentation they were built from.
 
 ## What's here
 
-- `force-app/main/default/lwc/`: 13 buildable LWC bundles (template, controller, styles,
-  metadata, Jest tests) implementing Durations, Dayparts and Bursts across two pages.
-  - **Brief page** (Bursts and Custom Dayparts): `burstsAndCustomDayparts`, `burstPeriods`,
-    `burstPeriod`, `customDayparts`, `customDaypart`.
-  - **Optimiser Inputs page** (Spot Durations and Standard Dayparts): `spotDurationsAndDayparts`,
-    `spotDurations`, `standardDayparts`, `durationPill`, `topTailToggle`, `topTailSetParent`,
-    `topTailSetChild`.
-  - Shared: `pill`.
-- `docs/LWC-DESIGN.md`: the developer-facing spec for all 13 components (`@api` properties,
-  events, public methods, composition examples, data model mapping).
-- `docs/design-handoff/`: the source design specs, including the authoritative Technical Design
-  PDF these components implement.
+20 buildable LWC bundles (template, controller, styles, metadata, Jest tests) in
+`force-app/main/default/lwc/`, across three features:
+
+- **Durations, Dayparts and Bursts** (Brief and Optimiser Inputs pages): `burstsAndCustomDayparts`,
+  `burstPeriods`, `burstPeriod`, `customDayparts`, `customDaypart`, `spotDurationsAndDayparts`,
+  `spotDurations`, `standardDayparts`, `durationPill`, `topTailToggle`, `topTailSetParent`,
+  `topTailSetChild`, `pill`. See `docs/LWC-DESIGN.md`.
+- **Split Creator** (Optimiser Inputs page): `splitConfigurator`, `split`, `splitDetails`,
+  `splitActions`. See `docs/LWC-DESIGN-split-creator.md`.
+- **Market/Channel Picker and Nav Rail Item** (Brief page): `marketChannelPicker`,
+  `marketChannelSelector`, `navRailItem`. See `docs/LWC-DESIGN-market-channel.md`.
+
+`docs/design-handoff/` holds the source design specs and technical design documents these
+components implement.
 
 ## Running the tests
 
@@ -25,4 +27,4 @@ npm install
 npm test
 ```
 
-55 tests pass as delivered. See `docs/LWC-DESIGN.md` for what each suite covers.
+98 tests pass as delivered.

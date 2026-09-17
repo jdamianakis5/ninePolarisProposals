@@ -1,0 +1,13 @@
+<template>
+    <button type="button" class={buttonClass} disabled={locked} title={title} onclick={handleClick}>
+        <span class="nav-rail-item__icon">
+            <slot name="icon"></slot>
+        </span>
+        <template lwc:if={showLabel}>
+            <span class="nav-rail-item__label">{label}</span>
+        </template>
+        <template lwc:if={showTick}>
+            <span class="nav-rail-item__tick"></span>
+        </template>
+    </button>
+</template>
