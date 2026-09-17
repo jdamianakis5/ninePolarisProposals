@@ -1,0 +1,21 @@
+.tt-input {
+    width: 6rem;
+}
+
+.tt-input__suffix {
+    position: absolute;
+    right: 0.75rem;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 0.8125rem;
+    color: var(--slds-g-color-neutral-base-30, #747474);
+    pointer-events: none;
+}
+
+.tt-actions {
+    gap: 1rem;
+}
+
+.tt-remove {
+    color: var(--slds-g-color-neutral-base-30, #747474);
+}

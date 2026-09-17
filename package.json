@@ -1,0 +1,13 @@
+{
+  "name": "proposal-builder-brief-components",
+  "version": "1.0.0",
+  "description": "Burst Periods and Custom Time Periods LWC components for the Proposal Builder Brief page",
+  "scripts": {
+    "test": "sfdx-lwc-jest",
+    "test:watch": "sfdx-lwc-jest --watch"
+  },
+  "license": "UNLICENSED",
+  "devDependencies": {
+    "@salesforce/sfdx-lwc-jest": "^7.9.0"
+  }
+}

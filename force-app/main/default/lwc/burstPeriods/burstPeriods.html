@@ -1,0 +1,108 @@
+<template>
+    <div class="slds-var-p-around_small burst-periods">
+        <h3 class="slds-text-heading_small slds-var-m-bottom_small">Burst Periods</h3>
+
+        <template for:each={rows} for:item="row">
+            <div key={row.id} class="slds-grid slds-wrap slds-gutters_x-small slds-var-m-bottom_small burst-row">
+                <div class="slds-col slds-grow-none burst-row__name">
+                    <lightning-input
+                        label="Name"
+                        variant="label-hidden"
+                        placeholder={row.placeholder}
+                        value={row.name}
+                        data-id={row.id}
+                        disabled={row.disabled}
+                        onchange={handleNameChange}>
+                    </lightning-input>
+                </div>
+
+                <div class="slds-col slds-grow-none slds-is-relative">
+                    <button
+                        type="button"
+                        class="slds-button slds-button_neutral date-field"
+                        data-id={row.id}
+                        data-field="start"
+                        disabled={row.disabled}
+                        onclick={handleOpenPicker}>{row.startLabel}</button>
+                    <template lwc:if={row.startCalendar}>
+                        <div class="date-popover slds-popover slds-popover_default" role="dialog">
+                            <div class="slds-grid slds-grid_align-spread slds-var-p-bottom_x-small">
+                                <button type="button" class="slds-button slds-button_icon" title="Previous month" onclick={handlePrevMonth}>‹</button>
+                                <span class="slds-text-heading_x-small">{row.startCalendar.monthLabel}</span>
+                                <button type="button" class="slds-button slds-button_icon" title="Next month" onclick={handleNextMonth}>›</button>
+                            </div>
+                            <div class="calendar-grid calendar-grid_header">
+                                <template for:each={row.startCalendar.dayLabels} for:item="dayLabel">
+                                    <span key={dayLabel} class="day-label">{dayLabel}</span>
+                                </template>
+                            </div>
+                            <template for:each={row.startCalendar.weeks} for:item="week">
+                                <div key={week.key} class="calendar-grid">
+                                    <template for:each={week.days} for:item="day">
+                                        <button key={day.key} type="button" class={day.class} data-date={day.iso} onclick={handleSelectDay}>{day.label}</button>
+                                    </template>
+                                </div>
+                            </template>
+                        </div>
+                    </template>
+                </div>
+
+                <span class="slds-var-p-horizontal_x-small slds-text-color_weak">to</span>
+
+                <div class="slds-col slds-grow-none slds-is-relative">
+                    <button
+                        type="button"
+                        class="slds-button slds-button_neutral date-field"
+                        data-id={row.id}
+                        data-field="end"
+                        disabled={row.disabled}
+                        onclick={handleOpenPicker}>{row.endLabel}</button>
+                    <template lwc:if={row.endCalendar}>
+                        <div class="date-popover slds-popover slds-popover_default" role="dialog">
+                            <div class="slds-grid slds-grid_align-spread slds-var-p-bottom_x-small">
+                                <button type="button" class="slds-button slds-button_icon" title="Previous month" onclick={handlePrevMonth}>‹</button>
+                                <span class="slds-text-heading_x-small">{row.endCalendar.monthLabel}</span>
+                                <button type="button" class="slds-button slds-button_icon" title="Next month" onclick={handleNextMonth}>›</button>
+                            </div>
+                            <div class="calendar-grid calendar-grid_header">
+                                <template for:each={row.endCalendar.dayLabels} for:item="dayLabel">
+                                    <span key={dayLabel} class="day-label">{dayLabel}</span>
+                                </template>
+                            </div>
+                            <template for:each={row.endCalendar.weeks} for:item="week">
+                                <div key={week.key} class="calendar-grid">
+                                    <template for:each={week.days} for:item="day">
+                                        <button key={day.key} type="button" class={day.class} data-date={day.iso} onclick={handleSelectDay}>{day.label}</button>
+                                    </template>
+                                </div>
+                            </template>
+                        </div>
+                    </template>
+                </div>
+
+                <div class="slds-col slds-grow-none">
+                    <button
+                        type="button"
+                        class="slds-button slds-button_text-destructive"
+                        data-id={row.id}
+                        disabled={row.disabled}
+                        onclick={handleRemove}>Remove</button>
+                </div>
+
+                <template lwc:if={row.issue}>
+                    <div class="slds-col slds-size_1-of-1 slds-text-color_error slds-text-body_small">{row.issue}</div>
+                </template>
+            </div>
+        </template>
+
+        <template lwc:if={hasBursts}>
+            <p class="slds-text-body_small slds-text-color_weak slds-var-m-top_x-small">{hintText}</p>
+        </template>
+
+        <button
+            type="button"
+            class="slds-button slds-button_neutral slds-var-m-top_small"
+            disabled={disabled}
+            onclick={handleAddBurst}>+ Add Burst Period</button>
+    </div>
+</template>
