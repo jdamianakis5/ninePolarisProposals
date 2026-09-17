@@ -1,0 +1,11 @@
+.add-duration {
+    height: 1.875rem;
+    border: 1px dashed var(--slds-g-color-border-base-4, #c9c9c9);
+    border-radius: 999px;
+    padding: 0 0.75rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--slds-g-color-brand-base-50, #0176d3);
+    background: #ffffff;
+    cursor: pointer;
+}

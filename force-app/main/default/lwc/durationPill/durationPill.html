@@ -1,0 +1,17 @@
+<template>
+    <div class="slds-grid slds-wrap slds-gutters_x-small slds-grid_vertical-align-center duration-pill">
+        <template for:each={pills} for:item="pill">
+            <div key={pill.value} class="slds-col slds-grow-none">
+                <c-pill label={pill.label} value={pill.value} selected={pill.selected} disabled={disabled} onpillclick={handlePillClick}></c-pill>
+            </div>
+        </template>
+        <div class="slds-col slds-grow-none">
+            <select class="add-duration" disabled={disabled} onchange={handleAddDuration}>
+                <option value="">+ Add duration</option>
+                <template for:each={addOptions} for:item="option">
+                    <option key={option.value} value={option.value}>{option.label}</option>
+                </template>
+            </select>
+        </div>
+    </div>
+</template>

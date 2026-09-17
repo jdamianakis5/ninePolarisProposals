@@ -1,0 +1,25 @@
+.pill {
+    display: inline-flex;
+    align-items: center;
+    height: 1.875rem;
+    padding: 0 1rem;
+    border-radius: 999px;
+    font-size: 0.8125rem;
+    font-weight: 400;
+    cursor: pointer;
+    border: 1px solid var(--slds-g-color-border-base-4, #c9c9c9);
+    background: #ffffff;
+    color: var(--slds-g-color-neutral-base-30, #444444);
+}
+
+.pill:disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
+}
+
+.pill_selected {
+    font-weight: 600;
+    border-color: var(--slds-g-color-brand-base-50, #0176d3);
+    background: var(--slds-g-color-brand-base-50, #0176d3);
+    color: #ffffff;
+}

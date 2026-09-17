@@ -1,0 +1,58 @@
+.burst-period__name {
+    width: 8.5rem;
+}
+
+.date-field {
+    min-width: 8rem;
+    text-align: left;
+}
+
+.date-popover {
+    position: absolute;
+    top: calc(100% + 0.25rem);
+    left: 0;
+    z-index: 20;
+    width: 16rem;
+    padding: 0.75rem;
+}
+
+.calendar-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 0.125rem;
+    text-align: center;
+}
+
+.calendar-grid_header .day-label {
+    font-size: 0.6875rem;
+    font-weight: 700;
+    color: var(--slds-g-color-neutral-base-30, #706e6b);
+}
+
+.day-cell {
+    border: none;
+    background: transparent;
+    border-radius: 0.25rem;
+    padding: 0.25rem 0;
+    font-size: 0.75rem;
+    cursor: pointer;
+}
+
+.day-cell:hover {
+    background: var(--slds-g-color-neutral-base-95, #f3f3f3);
+}
+
+.day-cell_outside-month {
+    color: var(--slds-g-color-neutral-base-60, #c9c9c9);
+}
+
+.day-cell_outside-flight {
+    background: var(--slds-g-color-neutral-base-95, #fafafa);
+    color: var(--slds-g-color-neutral-base-60, #b9b9b9);
+}
+
+.day-cell_selected {
+    background: var(--slds-g-color-brand-base-50, #0176d3);
+    color: #ffffff;
+    font-weight: 700;
+}

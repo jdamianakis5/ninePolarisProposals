@@ -1,7 +1,7 @@
 {
-  "name": "proposal-builder-brief-components",
+  "name": "nine-polaris-proposals",
   "version": "1.0.0",
-  "description": "Burst Periods and Custom Time Periods LWC components for the Proposal Builder Brief page",
+  "description": "Durations, Dayparts and Bursts LWC components for the Proposal Builder Brief and Optimiser Inputs pages",
   "scripts": {
     "test": "sfdx-lwc-jest",
     "test:watch": "sfdx-lwc-jest --watch"

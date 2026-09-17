@@ -7,104 +7,105 @@ function generateId() {
     return `daypart-${Date.now()}-${nextId}`;
 }
 
-function to12Hour(hhmm) {
-    const [hourStr, minute] = hhmm.split(':');
-    const hour = Number(hourStr);
-    const period = hour >= 12 ? 'pm' : 'am';
-    const hour12 = hour % 12 === 0 ? 12 : hour % 12;
-    return minute === '00' ? `${hour12}${period}` : `${hour12}:${minute}${period}`;
+function sameTriple(a, b) {
+    return (a.name || '') === (b.name || '') && a.start === b.start && a.end === b.end;
 }
 
 /**
- * Custom Time Period list for the Proposal Builder Brief page (Stations & Timing,
- * Dayparts section). This component is the whole "custom daypart" feature: the
- * + Custom Time Period button and the row list.
- *
- * It does not decide its own visibility. The parent (the Dayparts section, which also
- * owns the standard Peak/Off-Peak/Mid-Dawn pills) renders this component only when the
- * campaign is fixed-only:
- *
- *   <template lwc:if={isFixedOnly}>
- *       <c-custom-dayparts ranges={inputs.ranges} onDayPartRangesChange={handleRangesChange}>
- *       </c-custom-dayparts>
- *   </template>
- *
- * Unmounting this component when isFixedOnly goes false does not delete data: `ranges`
- * is owned by the parent record, so the rows simply stop rendering until the campaign
- * is fixed-only again. Confirm with the business whether that "hidden but preserved"
- * behaviour is what they want, per the open question raised in
- * design_handoff_spot_timing/README.md.
+ * Level 2 section: repeats customDaypart rows, runs the overlap check across the list, and
+ * owns the Update Defaults action (Technical Design section 2, 6.5). Visible only for
+ * fixed-only campaigns, but that gate is the parent's (burstsAndCustomDayparts) decision.
  */
 export default class CustomDayparts extends LightningElement {
-    @api ranges = [];
+    @api dayparts = []; // { id, name, start, end, isApplyByDefault }[]
+    @api defaultDayparts = []; // the stored Account-level default set, for comparison only
     @api disabled = false;
 
     get rows() {
-        return this.ranges.map((range, index) => {
-            const isError = !(range.start && range.end);
-            return {
-                id: range.id,
-                name: range.name,
-                placeholder: `Daypart ${index + 1}`,
-                start: range.start,
-                end: range.end,
-                summary: this.summaryFor(range),
-                summaryClass: `slds-col slds-text-body_small ${isError ? 'slds-text-color_error' : 'slds-text-color_weak'}`,
-                disabled: this.disabled
-            };
-        });
+        const issues = this.issuesByDaypartId();
+        return this.dayparts.map((daypart, index) => ({
+            id: daypart.id,
+            daypart,
+            placeholder: `Daypart ${index + 1}`,
+            issue: issues[daypart.id] || '',
+            disabled: this.disabled
+        }));
     }
 
-    summaryFor(range) {
-        if (!range.start || !range.end) {
-            return 'Set a start and an end time';
+    get canUpdateDefaults() {
+        if (!this.dayparts.length) {
+            return false;
         }
-        return `${to12Hour(range.start)} to ${to12Hour(range.end)}`;
+        const diverged = !this.dayparts.every((d) => d.isApplyByDefault === true)
+            || this.dayparts.length !== this.defaultDayparts.length
+            || !this.dayparts.every((d) => this.defaultDayparts.some((def) => sameTriple(d, def)));
+        return diverged;
+    }
+
+    get updateDefaultsDisabled() {
+        return this.disabled || !this.canUpdateDefaults;
     }
 
     /**
-     * @returns {string[]} one message per row missing a start or end time, matching the
-     * exact wording relied on by the Proposal Builder navigation guard.
+     * @returns {String[]} one message per row missing a time, or per overlapping pair.
+     * Custom dayparts are entirely optional: an empty list is valid.
      */
     @api validate() {
-        return this.ranges
-            .map((range, index) => ({ range, index }))
-            .filter(({ range }) => !range.start || !range.end)
-            .map(({ range, index }) => {
-                const name = range.name || `Daypart ${index + 1}`;
-                return `Custom time period ${name} needs both a start and an end time.`;
+        const issues = this.issuesByDaypartId();
+        return this.dayparts.filter((d) => issues[d.id]).map((d) => issues[d.id]);
+    }
+
+    issuesByDaypartId() {
+        const parsed = this.dayparts.map((daypart, index) => ({
+            daypart,
+            name: daypart.name || `Daypart ${index + 1}`
+        }));
+        const issues = {};
+        parsed.forEach((item, index) => {
+            const { start, end } = item.daypart;
+            if (!start || !end) {
+                issues[item.daypart.id] = `Custom time period ${item.name} needs both a start and an end time.`;
+                return;
+            }
+            const clash = parsed.find((other, otherIndex) => {
+                if (otherIndex <= index) {
+                    return false;
+                }
+                const { start: oStart, end: oEnd } = other.daypart;
+                return oStart && oEnd && oStart <= end && start <= oEnd;
             });
+            if (clash) {
+                issues[item.daypart.id] = `${item.name} overlaps ${clash.name}.`;
+            }
+        });
+        return issues;
     }
 
     handleAdd() {
         if (this.disabled) {
             return;
         }
-        this.emitChange([...this.ranges, { id: generateId(), name: '', start: '', end: '' }]);
+        this.emitChange([...this.dayparts, { id: generateId(), name: '', start: '', end: '', isApplyByDefault: false }]);
     }
 
-    handleNameChange(event) {
-        this.patchRange(event.currentTarget.dataset.id, { name: event.target.value });
+    handleDaypartChange(event) {
+        const { id, patch } = event.detail;
+        this.emitChange(this.dayparts.map((d) => (d.id === id ? { ...d, ...patch } : d)));
     }
 
-    handleStartChange(event) {
-        this.patchRange(event.currentTarget.dataset.id, { start: event.target.value });
+    handleDaypartRemove(event) {
+        const { id } = event.detail;
+        this.emitChange(this.dayparts.filter((d) => d.id !== id));
     }
 
-    handleEndChange(event) {
-        this.patchRange(event.currentTarget.dataset.id, { end: event.target.value });
+    handleUpdateDefaults() {
+        if (this.updateDefaultsDisabled) {
+            return;
+        }
+        this.dispatchEvent(new CustomEvent('updatedefaults', { detail: { dayparts: this.dayparts } }));
     }
 
-    handleRemove(event) {
-        const { id } = event.currentTarget.dataset;
-        this.emitChange(this.ranges.filter((range) => range.id !== id));
-    }
-
-    patchRange(id, patch) {
-        this.emitChange(this.ranges.map((range) => (range.id === id ? { ...range, ...patch } : range)));
-    }
-
-    emitChange(ranges) {
-        this.dispatchEvent(new CustomEvent('daypartrangeschange', { detail: { ranges } }));
+    emitChange(dayparts) {
+        this.dispatchEvent(new CustomEvent('customdaypartschange', { detail: { dayparts } }));
     }
 }

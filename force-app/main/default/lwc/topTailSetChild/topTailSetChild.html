@@ -1,0 +1,51 @@
+<template>
+    <div class="slds-box slds-theme_shade slds-var-m-bottom_small tt-set">
+        <div class="slds-grid slds-wrap slds-gutters_small slds-grid_vertical-align-end">
+            <div class="slds-col slds-grow-none">
+                <div class={fieldWrapClass}>
+                    <label class="slds-form-element__label"><abbr class="slds-required" title="required">*</abbr>Top duration</label>
+                    <div class="slds-form-element__control slds-input-has-icon slds-input-has-icon_right">
+                        <input type="text" inputmode="numeric" class="slds-input tt-input" placeholder="0" value={set.top} disabled={disabled} onchange={handleTopChange}>
+                        <span class="slds-icon_container tt-input__suffix">sec</span>
+                    </div>
+                </div>
+            </div>
+
+            <template lwc:if={set.hasMid}>
+                <div class="slds-col slds-grow-none">
+                    <div class="slds-form-element">
+                        <label class="slds-form-element__label">Middle duration</label>
+                        <div class="slds-form-element__control slds-input-has-icon slds-input-has-icon_right">
+                            <input type="text" inputmode="numeric" class="slds-input tt-input" placeholder="0" value={set.mid} disabled={disabled} onchange={handleMidChange}>
+                            <span class="slds-icon_container tt-input__suffix">sec</span>
+                        </div>
+                    </div>
+                </div>
+            </template>
+
+            <div class="slds-col slds-grow-none">
+                <div class={fieldWrapClass}>
+                    <label class="slds-form-element__label"><abbr class="slds-required" title="required">*</abbr>Tail duration</label>
+                    <div class="slds-form-element__control slds-input-has-icon slds-input-has-icon_right">
+                        <input type="text" inputmode="numeric" class="slds-input tt-input" placeholder="0" value={set.tail} disabled={disabled} onchange={handleTailChange}>
+                        <span class="slds-icon_container tt-input__suffix">sec</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="slds-col slds-grow slds-grid slds-grid_vertical-align-center tt-actions">
+                <button type="button" class="slds-button slds-button_text-brand" disabled={disabled} onclick={handleMidToggle}>{midLabel}</button>
+                <template lwc:if={showRemove}>
+                    <button type="button" class="slds-button slds-button_text-brand tt-remove" disabled={disabled} onclick={handleRemove}>Remove set</button>
+                </template>
+            </div>
+        </div>
+
+        <template lwc:if={invalid}>
+            <p class="slds-text-body_small slds-text-color_error slds-var-m-top_x-small">{bookableMessage}</p>
+        </template>
+        <template lwc:if={showOk}>
+            <p class="slds-text-body_small slds-text-color_weak slds-var-m-top_x-small">Totals {sum}s.</p>
+        </template>
+    </div>
+</template>

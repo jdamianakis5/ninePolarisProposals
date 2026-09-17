@@ -1,0 +1,23 @@
+<template>
+    <div class="spot-durations">
+        <template lwc:if={fixedOnly}>
+            <c-top-tail-toggle checked={topTail} disabled={disabled} ontogglechange={handleToggleChange}></c-top-tail-toggle>
+        </template>
+
+        <div class="slds-var-m-top_small">
+            <c-duration-pill
+                visible-durations={visibleDurations}
+                selected={selected}
+                available-durations={availableDurations}
+                disabled={disabled}
+                ondurationschange={handleDurationsChange}>
+            </c-duration-pill>
+        </div>
+
+        <template lwc:if={showTopTailSets}>
+            <div class="slds-var-m-top_small">
+                <c-top-tail-set-parent sets={topTailSets} disabled={disabled} ontoptailsetschange={handleTopTailSetsChange}></c-top-tail-set-parent>
+            </div>
+        </template>
+    </div>
+</template>

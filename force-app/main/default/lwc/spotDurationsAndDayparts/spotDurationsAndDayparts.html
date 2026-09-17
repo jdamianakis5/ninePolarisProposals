@@ -1,0 +1,26 @@
+<template>
+    <div class="slds-card">
+        <div class="slds-card__header">
+            <h3 class="slds-text-heading_small">Spot Durations and Standard Dayparts</h3>
+        </div>
+        <div class="slds-card__body slds-card__body_inner slds-grid slds-wrap slds-gutters_large">
+            <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2">
+                <h4 class="slds-text-heading_small slds-var-m-bottom_small">Spot Durations</h4>
+                <c-spot-durations
+                    visible-durations={visibleDurations}
+                    selected={selectedDurations}
+                    available-durations={availableDurations}
+                    top-tail={topTail}
+                    top-tail-sets={topTailSets}
+                    fixed-only={fixedOnly}
+                    disabled={disabled}
+                    onspotdurationschange={handleSpotDurationsChange}>
+                </c-spot-durations>
+            </div>
+            <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2">
+                <h4 class="slds-text-heading_small slds-var-m-bottom_small">Dayparts</h4>
+                <c-standard-dayparts selected={selectedDayparts} disabled={disabled} onstandarddaypartschange={handleStandardDaypartsChange}></c-standard-dayparts>
+            </div>
+        </div>
+    </div>
+</template>

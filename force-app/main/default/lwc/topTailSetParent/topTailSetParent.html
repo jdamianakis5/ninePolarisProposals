@@ -1,0 +1,17 @@
+<template>
+    <div class="top-tail-set-parent">
+        <template for:each={rows} for:item="row">
+            <c-top-tail-set-child
+                key={row.id}
+                set={row.set}
+                issue={row.issue}
+                show-remove={row.showRemove}
+                disabled={row.disabled}
+                ontoptailsetchange={handleSetChange}
+                ontoptailsetremove={handleSetRemove}>
+            </c-top-tail-set-child>
+        </template>
+
+        <button type="button" class="slds-button slds-button_neutral" disabled={disabled} onclick={handleAddSet}>+ Add top/tail set</button>
+    </div>
+</template>

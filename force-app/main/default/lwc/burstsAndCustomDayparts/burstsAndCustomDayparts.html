@@ -1,0 +1,28 @@
+<template>
+    <div class="slds-card">
+        <div class="slds-card__header">
+            <h3 class="slds-text-heading_small">Bursts and Custom Dayparts</h3>
+        </div>
+        <div class="slds-card__body slds-card__body_inner">
+            <c-burst-periods
+                bursts={bursts}
+                plan-start={planStart}
+                plan-end={planEnd}
+                disabled={disabled}
+                onburstschange={handleBurstsChange}>
+            </c-burst-periods>
+
+            <template lwc:if={fixedOnly}>
+                <div class="slds-var-m-top_large slds-var-p-top_large slds-border_top">
+                    <c-custom-dayparts
+                        dayparts={dayparts}
+                        default-dayparts={defaultDayparts}
+                        disabled={disabled}
+                        oncustomdaypartschange={handleDaypartsChange}
+                        onupdatedefaults={handleUpdateDefaults}>
+                    </c-custom-dayparts>
+                </div>
+            </template>
+        </div>
+    </div>
+</template>

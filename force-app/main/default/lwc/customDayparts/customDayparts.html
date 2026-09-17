@@ -1,57 +1,23 @@
 <template>
     <div class="custom-dayparts">
+        <div class="slds-grid slds-grid_align-spread slds-grid_vertical-align-center slds-var-m-bottom_small">
+            <h4 class="slds-text-heading_small">Custom Dayparts</h4>
+            <button type="button" class="slds-button slds-button_neutral" disabled={updateDefaultsDisabled} onclick={handleUpdateDefaults}>Update Defaults</button>
+        </div>
+
         <template for:each={rows} for:item="row">
-            <div key={row.id} class="slds-grid slds-wrap slds-gutters_x-small slds-var-m-bottom_x-small slds-grid_vertical-align-end">
-                <div class="slds-col slds-grow-none daypart-name">
-                    <lightning-input
-                        label="Name"
-                        variant="label-hidden"
-                        placeholder={row.placeholder}
-                        value={row.name}
-                        data-id={row.id}
-                        disabled={row.disabled}
-                        onchange={handleNameChange}>
-                    </lightning-input>
-                </div>
-                <div class="slds-col slds-grow-none">
-                    <lightning-input
-                        type="time"
-                        label="Start time"
-                        variant="label-hidden"
-                        value={row.start}
-                        data-id={row.id}
-                        disabled={row.disabled}
-                        onchange={handleStartChange}>
-                    </lightning-input>
-                </div>
-                <span class="slds-var-p-horizontal_x-small slds-text-color_weak">to</span>
-                <div class="slds-col slds-grow-none">
-                    <lightning-input
-                        type="time"
-                        label="End time"
-                        variant="label-hidden"
-                        value={row.end}
-                        data-id={row.id}
-                        disabled={row.disabled}
-                        onchange={handleEndChange}>
-                    </lightning-input>
-                </div>
-                <div class={row.summaryClass}>{row.summary}</div>
-                <div class="slds-col slds-grow-none">
-                    <button
-                        type="button"
-                        class="slds-button slds-button_text-destructive"
-                        data-id={row.id}
-                        disabled={row.disabled}
-                        onclick={handleRemove}>Remove</button>
-                </div>
+            <div key={row.id} class="slds-var-m-bottom_small">
+                <c-custom-daypart
+                    daypart={row.daypart}
+                    placeholder={row.placeholder}
+                    issue={row.issue}
+                    disabled={row.disabled}
+                    oncustomdaypartchange={handleDaypartChange}
+                    oncustomdaypartremove={handleDaypartRemove}>
+                </c-custom-daypart>
             </div>
         </template>
 
-        <button
-            type="button"
-            class="slds-button slds-button_neutral"
-            disabled={disabled}
-            onclick={handleAdd}>+ Custom Time Period</button>
+        <button type="button" class="slds-button slds-button_neutral" disabled={disabled} onclick={handleAdd}>+ Add Custom Dayparts</button>
     </div>
 </template>

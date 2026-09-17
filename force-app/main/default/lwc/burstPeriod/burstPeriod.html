@@ -1,0 +1,78 @@
+<template>
+    <div class="burst-period">
+        <div class="slds-grid slds-wrap slds-gutters_x-small slds-grid_vertical-align-end">
+            <div class="slds-col slds-grow-none burst-period__name">
+                <lightning-input
+                    label="Name"
+                    variant="label-hidden"
+                    placeholder={placeholder}
+                    value={burst.name}
+                    disabled={disabled}
+                    onchange={handleNameChange}>
+                </lightning-input>
+            </div>
+
+            <div class="slds-col slds-grow-none slds-is-relative">
+                <button type="button" class="slds-button slds-button_neutral date-field" data-field="start" disabled={disabled} onclick={handleOpenPicker}>{startLabel}</button>
+                <template lwc:if={startCalendar}>
+                    <div class="date-popover slds-popover slds-popover_default" role="dialog">
+                        <div class="slds-grid slds-grid_align-spread slds-var-p-bottom_x-small">
+                            <button type="button" class="slds-button slds-button_icon" title="Previous month" onclick={handlePrevMonth}>‹</button>
+                            <span class="slds-text-heading_x-small">{startCalendar.monthLabel}</span>
+                            <button type="button" class="slds-button slds-button_icon" title="Next month" onclick={handleNextMonth}>›</button>
+                        </div>
+                        <div class="calendar-grid calendar-grid_header">
+                            <template for:each={startCalendar.dayLabels} for:item="dayLabel">
+                                <span key={dayLabel} class="day-label">{dayLabel}</span>
+                            </template>
+                        </div>
+                        <template for:each={startCalendar.weeks} for:item="week">
+                            <div key={week.key} class="calendar-grid">
+                                <template for:each={week.days} for:item="day">
+                                    <button key={day.key} type="button" class={day.class} data-date={day.iso} onclick={handleSelectDay}>{day.label}</button>
+                                </template>
+                            </div>
+                        </template>
+                    </div>
+                </template>
+            </div>
+
+            <span class="slds-var-p-horizontal_x-small slds-text-color_weak">to</span>
+
+            <div class="slds-col slds-grow-none slds-is-relative">
+                <button type="button" class="slds-button slds-button_neutral date-field" data-field="end" disabled={disabled} onclick={handleOpenPicker}>{endLabel}</button>
+                <template lwc:if={endCalendar}>
+                    <div class="date-popover slds-popover slds-popover_default" role="dialog">
+                        <div class="slds-grid slds-grid_align-spread slds-var-p-bottom_x-small">
+                            <button type="button" class="slds-button slds-button_icon" title="Previous month" onclick={handlePrevMonth}>‹</button>
+                            <span class="slds-text-heading_x-small">{endCalendar.monthLabel}</span>
+                            <button type="button" class="slds-button slds-button_icon" title="Next month" onclick={handleNextMonth}>›</button>
+                        </div>
+                        <div class="calendar-grid calendar-grid_header">
+                            <template for:each={endCalendar.dayLabels} for:item="dayLabel">
+                                <span key={dayLabel} class="day-label">{dayLabel}</span>
+                            </template>
+                        </div>
+                        <template for:each={endCalendar.weeks} for:item="week">
+                            <div key={week.key} class="calendar-grid">
+                                <template for:each={week.days} for:item="day">
+                                    <button key={day.key} type="button" class={day.class} data-date={day.iso} onclick={handleSelectDay}>{day.label}</button>
+                                </template>
+                            </div>
+                        </template>
+                    </div>
+                </template>
+            </div>
+
+            <template lwc:if={showRemove}>
+                <div class="slds-col slds-grow-none">
+                    <button type="button" class="slds-button slds-button_text-destructive" disabled={disabled} onclick={handleRemove}>Remove</button>
+                </div>
+            </template>
+        </div>
+
+        <template lwc:if={hasIssue}>
+            <p class="slds-text-body_small slds-text-color_error slds-var-m-top_xx-small">{issue}</p>
+        </template>
+    </div>
+</template>

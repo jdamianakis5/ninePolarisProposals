@@ -1,236 +1,340 @@
-# LWC design: Burst Periods, Custom Time Periods and Top/Tail Durations
+# LWC design: Durations, Dayparts and Bursts
 
-Three Lightning Web Components for the Proposal Builder Brief page (Stations & Timing panel),
-built from the behaviour in `docs/design-handoff/spot-timing-panel.md` and, for Top/Tail Durations,
-cross-checked directly against `Spot Timing Panel.dc.html`'s logic class. All three are complete,
-buildable component bundles: template, controller, styles, metadata and Jest tests. Run
-`npm install && npm test` from this folder: 15 tests pass against the code as delivered.
+Thirteen Lightning Web Components implementing the
+[Technical Design: Durations, Dayparts and Bursts Component](design-handoff/TTP-Technical-Design-Durations-Dayparts-Bursts.pdf)
+(the "TTP"), which is the authoritative source for scope, hierarchy, and validation rules in
+this document. Where this document and the TTP disagree, the TTP wins; flag the difference to
+the team rather than trusting this file blindly, since it is a snapshot.
 
-| Component | Bundle path | What it owns |
-| --- | --- | --- |
-| Burst Periods | `force-app/main/default/lwc/burstPeriods` | Its own header, the burst list, the Sunday-first date picker, and flight/overlap validation. Always visible. |
-| Custom Time Periods | `force-app/main/default/lwc/customDayparts` | The `+ Custom Time Period` button and the custom-daypart row list. Visible only when the campaign is fixed-only, but visibility is the parent's decision, not this component's. |
-| Top/Tail Durations | `force-app/main/default/lwc/topTailDurations` | The "Enable Top/Tail durations" toggle and the top/tail set editor (add, remove, add/remove middle duration, per-set validation). Fixed-only feature, same visibility pattern as Custom Time Periods. |
+The original single "Spot Durations, Dayparts and Bursts" component (documented in
+`docs/design-handoff/spot-timing-panel.md`, and implemented by the first three components added
+to this repo) has since split across two pages, per the TTP:
 
-None of the three talk to Apex, an object, or another component directly. All are pure
-"controlled" components: the parent hands in an array (or a boolean plus an array, for Top/Tail)
-as `@api`, the component renders it and validates it, and every edit comes back out as one
-`CustomEvent` carrying the whole next value. This matches the existing Proposal Builder pattern
-(state flows up to the parent as one object, the same approach used for the Optimisation screen's
-handoff and documented in `docs/design-handoff/spot-timing-panel.md`) and keeps all three
-components trivially testable and reusable outside this one page.
+1. **Bursts and Custom Dayparts**, staying on the **Brief page**.
+2. **Spot Durations and Standard Dayparts**, moving to the **Optimiser Inputs page**. Top/Tail
+   and Top/Middle/Tail duration sets move with it.
 
-## `burstPeriods`
+All thirteen components here are complete, buildable bundles (template, controller, styles,
+metadata, Jest tests). Run `npm install && npm test`: 55 tests pass against the code as
+delivered.
 
-### `@api` properties
+## Component tree
 
-| Property | Type | Description |
-| --- | --- | --- |
-| `bursts` | `{ id: String, name: String, start: String, end: String }[]` | The current burst list. `start`/`end` are ISO `yyyy-mm-dd` (or empty string when unset). `id` is a stable, component-generated key: the parent should persist it (e.g. as the child record's `Id` once saved) so re-renders don't lose picker state. |
-| `planStart` | `String` (ISO `yyyy-mm-dd`) | Campaign flight start. Bounds the date picker's out-of-flight shading and the `validate()` rules. |
-| `planEnd` | `String` (ISO `yyyy-mm-dd`) | Campaign flight end. |
-| `disabled` | `Boolean`, default `false` | Set when the proposal is booked/locked. Disables every input, the date pickers and Remove. |
+### Brief page: Bursts and Custom Dayparts
 
-### Events
+```
+burstsAndCustomDayparts (Level 1, card shell, holds working state)
+├── burstPeriods (Level 2)
+│   └── burstPeriod (Level 3, one per burst)
+└── customDayparts (Level 2, fixed-only only)
+    └── customDaypart (Level 3, one per custom daypart)
+```
 
-| Event | `detail` | Fired when |
-| --- | --- | --- |
-| `burstschange` | `{ bursts: [...] }` | Any add, edit, date pick, or remove. Always the **full** next array, not a delta. |
+### Optimiser Inputs page: Spot Durations and Standard Dayparts
 
-### Public methods
+```
+spotDurationsAndDayparts (Level 1, card shell, holds working state)
+├── spotDurations (Level 2)
+│   ├── topTailToggle (Level 3, fixed-only only)
+│   ├── durationPill (Level 3)
+│   │   └── pill (shared, one per duration option)
+│   └── topTailSetParent (Level 3, fixed-only + toggle on)
+│       └── topTailSetChild (one per set)
+└── standardDayparts (Level 2)
+    └── pill (shared, one per daypart option)
+```
 
-| Method | Returns | Notes |
-| --- | --- | --- |
-| `validate()` | `String[]` | One message per invalid burst, in the exact wording the existing navigation guard uses (`Set both a start and an end date.`, `The end date falls before the start date.`, `Starts before the campaign start (DD/MM/YYYY).`, `Ends after the campaign end (DD/MM/YYYY).`, `Overlaps {name}.`). Call this from the parent's own `@api validate()` before allowing Save & Close or a page change. |
+`pill` is the one component reused by both trees, per the TTP ("Existing component, reused").
 
-### Composition
+## Design pattern used throughout
+
+- **Level 1 is stateful.** `burstsAndCustomDayparts` and `spotDurationsAndDayparts` seed their
+  working state once from whatever the page loads (existing Linear Parameter records mapped to
+  plain rows), then own it locally. Each exposes `@api validate()` and `@api getPayload()` for
+  the page's shared save to call imperatively. This matches the TTP: "Holds the working state
+  for both sections and hands its payload to the page's shared save. Reports its own validity
+  upward."
+- **Level 2 and Level 3 are pure "controlled" components.** Props down, one `CustomEvent`
+  carrying the whole next value up. No component below Level 1 talks to Apex or holds
+  page-level state.
+- **Validation is layered.** Each Level 2/3 component validates what it alone can see (a set's
+  own bookable total, a row's own missing time). Cross-row checks that need sibling knowledge
+  (overlap, duplicate combinations) are computed by the nearest parent that can see every
+  sibling, never by the row itself. Checks that need two sections together (at least one
+  duration AND at least one daypart) live on Level 1, the only place that has both.
+
+---
+
+## Brief page components
+
+### `burstsAndCustomDayparts` (Level 1)
+
+| | |
+| --- | --- |
+| `@api planStart`, `planEnd` | ISO `yyyy-mm-dd`. Campaign flight, passed through to `burstPeriods`. |
+| `@api fixedOnly` | Gates the whole Custom Dayparts section. |
+| `@api defaultDayparts` | The stored Account-level default set, live/reactive (only ever changes as a result of Update Defaults succeeding server-side). |
+| `@api bursts`, `dayparts` | Seed-once working state (existing records on open). |
+| `@api disabled` | Locks every input (e.g. once the proposal is booked). |
+| `@api validate()` | Returns every issue from `burstPeriods`, plus `customDayparts`'s issues only while `fixedOnly` is true. |
+| `@api getPayload()` | `{ bursts, dayparts }`, the current working state. `dayparts` is returned even when not currently fixed-only: whether data from an earlier fixed-only state should be cleared, preserved, or flagged is open (TTP section 8.1/spot-timing-panel.md), so this defaults to preserving it. |
+| Event `updatedefaults` | Re-dispatched from the `customDayparts` child, detail `{ dayparts }`. The Brief page owns the actual Apex call to replace the Account-level defaults; on success it should pass a refreshed `defaultDayparts` back down. |
+
+### `burstPeriods` (Level 2)
+
+| | |
+| --- | --- |
+| `@api bursts` | `{ id, name, start, end }[]`. `start`/`end` are ISO `yyyy-mm-dd`. |
+| `@api planStart`, `planEnd` | Bounds the calendar shading and the flight-bounds rule. |
+| Event `burstschange` | `{ bursts }`, full next array, on add/edit/remove from any child row. |
+| `@api validate()` | One message per invalid burst: missing date(s), end before start, outside the flight, or overlapping another burst (checked pairwise across every row). |
+
+### `burstPeriod` (Level 3)
+
+One row: name, start date, end date via a Sunday-first custom calendar (`lightning-input
+type="date"` cannot be forced off the user's locale week start), and its own inline message
+(computed by the parent, since overlap needs sibling rows).
+
+| | |
+| --- | --- |
+| `@api burst`, `placeholder`, `planStart`, `planEnd`, `issue`, `showRemove`, `disabled` | |
+| Event `burstchange` | `{ id, patch }`: a partial patch, merged by the parent. |
+| Event `burstremove` | `{ id }` |
+
+### `customDayparts` (Level 2)
+
+Repeats `customDaypart` rows and owns the **Update Defaults** action (TTP section 2, 6.5): a
+Sales Person can save the current set as the Account's default, the same pattern already used
+for Program/Program Group exclusions elsewhere on the Brief page.
+
+| | |
+| --- | --- |
+| `@api dayparts` | `{ id, name, start, end, isApplyByDefault }[]`. `start`/`end` are `HH:mm`. |
+| `@api defaultDayparts` | The stored Account-level default, for divergence comparison only. |
+| Event `customdaypartschange` | `{ dayparts }`, full next array. |
+| Event `updatedefaults` | `{ dayparts }`, fired on Update Defaults click. Persisting it is out of scope for this component. |
+| `@api validate()` | One message per row missing a time, or per overlapping pair. Custom dayparts are entirely optional (TTP section 8.1 drops the old "at least one required" rule): an empty list is valid. |
+| Update Defaults, disabled when | Every row has `isApplyByDefault === true` **and** the set exactly matches `defaultDayparts` (same rows, same name/start/end). Adding, removing, or editing any row clears divergence and enables the button. |
+
+### `customDaypart` (Level 3)
+
+One row: name, start time, end time, and its own inline message (parent-computed, overlap
+needs siblings). Editing any field clears `isApplyByDefault` on that row, the same as editing a
+copied-in Program/Program Group exclusion clears its own default flag.
+
+| | |
+| --- | --- |
+| `@api daypart`, `placeholder`, `issue`, `disabled` | |
+| Event `customdaypartchange` | `{ id, patch }` (`patch` always includes `isApplyByDefault: false`). |
+| Event `customdaypartremove` | `{ id }` |
+
+### Composition (Brief page)
 
 ```html
-<c-burst-periods
-    bursts={inputs.bursts}
+<c-bursts-and-custom-dayparts
     plan-start={planStartIso}
     plan-end={planEndIso}
+    fixed-only={isFixedOnly}
+    bursts={initialBursts}
+    dayparts={initialCustomDayparts}
+    default-dayparts={accountDefaultDayparts}
     disabled={isBooked}
-    onburstschange={handleBurstsChange}>
-</c-burst-periods>
+    onupdatedefaults={handleUpdateDefaults}>
+</c-bursts-and-custom-dayparts>
 ```
 
 ```js
-handleBurstsChange(event) {
-    this.inputs = { ...this.inputs, bursts: event.detail.bursts };
-    this.notifyProposalBuilder();
-}
-```
-
-### Why a hand-rolled date picker
-
-`lightning-input type="date"` cannot be forced to start the week on Sunday (it follows the user's
-locale), which the source design requires. `burstPeriods` implements its own popover instead:
-Sunday-first 6-row grid, month navigation, and shading for out-of-month and out-of-flight days.
-If more than one component in the org ends up needing a Sunday-first picker, extract this into its
-own `c/weekPicker` component; it was kept inline here to match the two-component scope of this
-handoff.
-
-## `customDayparts`
-
-### `@api` properties
-
-| Property | Type | Description |
-| --- | --- | --- |
-| `ranges` | `{ id: String, name: String, start: String, end: String }[]` | The current custom time periods. `start`/`end` are `HH:mm` 24-hour strings. |
-| `disabled` | `Boolean`, default `false` | Same lock behaviour as `burstPeriods`. |
-
-### Events
-
-| Event | `detail` | Fired when |
-| --- | --- | --- |
-| `daypartrangeschange` | `{ ranges: [...] }` | Any add, edit or remove. Full next array. |
-
-### Public methods
-
-| Method | Returns | Notes |
-| --- | --- | --- |
-| `validate()` | `String[]` | One message per row missing a start or end time: `Custom time period {name or Daypart N} needs both a start and an end time.` This is **not** the full daypart validation: the "select at least one daypart, or create a custom time period" rule needs the standard Peak/Off-Peak/Mid-Dawn selection too, which this component does not own. Combine both in the parent (see below). |
-
-### Composition and the fixed-only gate
-
-This component does not check the trading model itself. The Dayparts section of the Stations &
-Timing panel (which also owns the standard daypart pills) decides whether to render it at all:
-
-```html
-<!-- Dayparts section, inside Stations & Timing -->
-<c-daypart-pills selected={inputs.dayparts} onchange={handleDaypartsChange}></c-daypart-pills>
-
-<template lwc:if={isFixedOnly}>
-    <c-custom-dayparts
-        ranges={inputs.ranges}
-        disabled={isBooked}
-        ondaypartrangeschange={handleRangesChange}>
-    </c-custom-dayparts>
-</template>
-```
-
-```js
-get isFixedOnly() {
-    return this.tradingModels.length === 1 && this.tradingModels[0] === 'fixed';
-}
-
-// Combine with the standard daypart rule; this lives on the parent, not on either child.
-@api validate() {
-    const issues = [];
-    const hasStandardDaypart = (this.inputs.dayparts || []).some((d) => !d.startsWith('~'));
-    const hasCustomRange = (this.inputs.ranges || []).length > 0;
-    if (!hasStandardDaypart && !(this.isFixedOnly && hasCustomRange)) {
-        issues.push(this.isFixedOnly
-            ? 'Select at least one daypart, or create at least one custom time period.'
-            : 'Select at least one daypart.');
+// Brief page controller, on Save & Close or navigating away
+handleSaveOrNavigate() {
+    const shell = this.template.querySelector('c-bursts-and-custom-dayparts');
+    const issues = shell.validate(); // combine with every other Brief page component's issues
+    if (issues.length) {
+        this.showIssues(issues);
+        return;
     }
-    if (this.isFixedOnly) {
-        issues.push(...this.template.querySelector('c-custom-dayparts')?.validate() ?? []);
-    }
-    issues.push(...this.template.querySelector('c-top-tail-durations').validate());
-    issues.push(...this.template.querySelector('c-burst-periods').validate());
-    return issues;
+    const { bursts, dayparts } = shell.getPayload();
+    // hand these to the single Apex trigger alongside every other Brief page component's payload
+}
+
+handleUpdateDefaults(event) {
+    // call the default-saving service (mirrors DefaultExclusionService), then refresh:
+    this.accountDefaultDayparts = event.detail.dayparts.map((d) => ({ name: d.name, start: d.start, end: d.end }));
 }
 ```
 
-Because visibility is the parent's decision, flipping away from fixed-only does not delete
-`inputs.ranges`: the data stays on the record, the component just stops rendering. **Confirm with
-the business** whether that "hidden but preserved" behaviour is correct, or whether ranges should
-be cleared when a campaign leaves fixed-only. This is the same open question already flagged for
-Top/Tail sets in `docs/design-handoff/spot-timing-panel.md`.
+---
 
-## `topTailDurations`
+## Optimiser Inputs page components
 
-### `@api` properties
+### `spotDurationsAndDayparts` (Level 1)
 
-| Property | Type | Description |
-| --- | --- | --- |
-| `topTail` | `Boolean`, default `false` | Whether Top/Tail durations are enabled for this campaign. |
-| `topTailSets` | `{ id: String, top: String, mid: String, hasMid: Boolean, tail: String }[]` | The current top/tail sets. `top`/`mid`/`tail` are raw digit strings in seconds (not coerced to Number: matches the source, which strips non-digits only when summing). `hasMid` gates whether the middle field renders. `id` is a stable, component-generated key. |
-| `disabled` | `Boolean`, default `false` | Same lock behaviour as the other two components. |
+| | |
+| --- | --- |
+| `@api availableDurations` | The duration catalogue, sourced from Agreement Default Ratio records (live, reactive: reference data, not working state). |
+| `@api fixedOnly`, `disabled` | |
+| `@api visibleDurations`, `selectedDurations`, `topTail`, `topTailSets`, `selectedDayparts` | Seed-once working state. |
+| `@api validate()` | `spotDurations`'s Top/Tail issues, plus "at least one duration selected" and "at least one daypart selected" (TTP section 8.2: exact trigger point and message copy are unconfirmed pending sign-off; the strings here are a starting point). |
+| `@api getPayload()` | `{ durations, dayparts }`: `durations` is `spotDurations`'s combined list (base selections plus any live Top/Tail chip labels), `dayparts` is the standard daypart selection. |
 
-### Events
+### `spotDurations` (Level 2)
 
-| Event | `detail` | Fired when |
-| --- | --- | --- |
-| `toptailchange` | `{ topTail: Boolean, topTailSets: [...], chipLabels: String[] }` | Toggling on/off, add set, remove set, add/remove middle duration, or editing a top/mid/tail field. |
+The toggle, duration chips, and the Top/Tail sets. Emits the full duration selection upward.
 
-`chipLabels` is the derived list of duration-chip labels for the currently enabled sets (for
-example `['Top/Tail 10s/5s', 'Top/Mid/Tail 15s/5s/10s']`), empty when `topTail` is `false`. A
-Top/Tail set doubles as an entry in the sibling "Spot Durations" chip picker, so the parent should
-reconcile `chipLabels` into its own duration selection on every event: remove any label that used
-to be in the previous `chipLabels` but is not in the new one, add any that is new. This component
-does not touch that chip list directly, the same separation of concerns as `customDayparts` not
-owning the standard daypart pills.
+| | |
+| --- | --- |
+| `@api visibleDurations` | Durations always shown as pills: the four mains plus any added via the picker. Never shrinks (matching "chips are not removed by clicking, only deselected"). |
+| `@api selected` | The base (non-Top/Tail) durations currently toggled on. |
+| `@api availableDurations`, `topTail`, `topTailSets`, `fixedOnly`, `disabled` | |
+| `@api get durations()` | The combined list: `selected` plus, only while `topTail` is true, one synthetic label per Top/Tail set (e.g. `Top/Tail 10s/5s`). |
+| Event `spotdurationschange` | `{ visibleDurations, selected, topTail, topTailSets, durations }` on any change below. |
+| `@api validate()` | Delegates to `topTailSetParent`, only while `fixedOnly` and `topTail` are both true. |
 
-### Public methods
+### `standardDayparts` (Level 2)
 
-| Method | Returns | Notes |
-| --- | --- | --- |
-| `validate()` | `String[]` | Returns `[]` when `topTail` is `false`. Otherwise, one message per set whose top (+ middle, if present) + tail does not sum to a bookable duration (`5, 6, 7, 8, 10, 15, 20, 30, 45, 60, 75, 90, 120, 180` seconds): `Top/tail set {n} does not total a bookable duration.` This is the **short** form used by the navigation guard. The inline UI under each set shows a more detailed message (exact total, full bookable list, and whether "middle" is mentioned), which is presentation only and is not what `validate()` returns. |
+Peak / Off-Peak / Mid-Dawn, rendered as `pill` directly: no Level 3 wrapper, since custom
+dayparts moved to the Brief page.
 
-### Composition
+| | |
+| --- | --- |
+| `@api selected`, `disabled` | |
+| Event `standarddaypartschange` | `{ selected }` |
+
+### `durationPill` (Level 3)
+
+The chip row: `pill` for each option in `visibleDurations`, plus the Add duration picklist for
+durations in `availableDurations` not already shown.
+
+| | |
+| --- | --- |
+| `@api visibleDurations`, `selected`, `availableDurations`, `disabled` | |
+| Event `durationschange` | `{ visibleDurations, selected }`. Picking a new duration appends it to both arrays and selects it; clicking an existing pill only toggles `selected`. |
+
+### `topTailToggle` (Level 3)
+
+The "Enable Top/Tail durations" toggle. A thin control: turning it off dropping every Top/Tail
+chip and hiding the sets below is `spotDurations`'s responsibility, not this component's.
+
+| | |
+| --- | --- |
+| `@api checked`, `disabled` | |
+| Event `togglechange` | `{ checked }` |
+
+### `topTailSetParent` (Level 3)
+
+Repeats `topTailSetChild`, adds and removes sets, and keeps the matching Top/Tail chip in step.
+Also owns the cross-set duplicate-combination check.
+
+| | |
+| --- | --- |
+| `@api sets`, `disabled` | `{ id, top, mid, hasMid, tail }[]` |
+| Event `toptailsetschange` | `{ sets, chipLabels }`: `chipLabels` is the derived label per set (e.g. `Top/Mid/Tail 15s/5s/10s`), used by `spotDurations` to build the combined `durations` list. |
+| `@api validate()` | One message per set that is not a bookable total (`Top/tail set {n} does not total a bookable duration.`), plus one per set that duplicates an earlier set's exact top/middle/tail combination (`Top/tail set {n} duplicates set {m}.`, **wording unconfirmed**: the TTP states the rule ("No two sets can duplicate the same combination, e.g. two 10s/5s Top/Tail sets") but not the exact copy). |
+| Named exports `newSet`, `labelFor` | Reused by `spotDurations` to derive chip labels without duplicating the formatting logic. |
+
+### `topTailSetChild`
+
+One Top/Tail (or Top/Middle/Tail) set: Top duration (required), Middle duration (only when
+`hasMid`), Tail duration (required), an add/remove-middle link, Remove set, and its own
+bookable-total message. Bookable durations: `5, 6, 7, 8, 10, 15, 20, 30, 45, 60, 75, 90, 120,
+180` seconds.
+
+| | |
+| --- | --- |
+| `@api set`, `showRemove`, `disabled` | |
+| `@api issue` | A duplicate-combination message from the parent, shown in place of the bookable-total message when present. |
+| Event `toptailsetchange` | `{ id, patch }` |
+| Event `toptailsetremove` | `{ id }` |
+| Named exports `sumOf`, `isBookable` | Reused by `topTailSetParent` for its own validation. |
+
+### `pill`
+
+Shared, presentational leaf: a single selectable chip. No business logic; the parent decides
+what "selected" means for its own list.
+
+| | |
+| --- | --- |
+| `@api label`, `value`, `selected`, `disabled` | |
+| Event `pillclick` | `{ value }`, only when not disabled. |
+
+### Composition (Optimiser Inputs page)
 
 ```html
-<c-top-tail-durations
-    top-tail={inputs.topTail}
-    top-tail-sets={inputs.topTailSets}
-    disabled={isBooked}
-    ontoptailchange={handleTopTailChange}>
-</c-top-tail-durations>
+<c-spot-durations-and-dayparts
+    available-durations={agreementDefaultRatioDurations}
+    fixed-only={isFixedOnly}
+    visible-durations={initialVisibleDurations}
+    selected-durations={initialSelectedDurations}
+    top-tail={initialTopTail}
+    top-tail-sets={initialTopTailSets}
+    selected-dayparts={initialSelectedDayparts}
+    disabled={isBooked}>
+</c-spot-durations-and-dayparts>
 ```
 
 ```js
-handleTopTailChange(event) {
-    const { topTail, topTailSets, chipLabels } = event.detail;
-    const withoutOldTopTailChips = this.inputs.durations.filter((label) => !label.startsWith('Top/'));
-    this.inputs = {
-        ...this.inputs,
-        topTail,
-        topTailSets,
-        durations: [...withoutOldTopTailChips, ...chipLabels]
-    };
-    this.notifyProposalBuilder();
+// Optimiser Inputs page controller, on Save & Close or navigating away
+handleSaveOrNavigate() {
+    const shell = this.template.querySelector('c-spot-durations-and-dayparts');
+    const issues = shell.validate();
+    if (issues.length) {
+        this.showIssues(issues);
+        return;
+    }
+    const { durations, dayparts } = shell.getPayload();
+    // hand these to the single Apex trigger alongside every other Optimiser Inputs component's payload
 }
 ```
 
-Rendering is gated by the parent exactly like `customDayparts`:
+The TTP itself flags a discrepancy worth raising with the team before building this: the Save
+Architecture section (4.2) assumes the same single-trigger, save-on-CTA pattern as the Brief
+page, but notes the earlier `optimiser-inputs-03`/`optimiser-inputs-04` stories described a
+different pattern, field-level autosave via `OptimiserInputsAutosaveController`. `validate()` /
+`getPayload()` above assume the CTA-triggered pattern; if autosave is what actually ships, the
+save-triggering side of this contract needs to change (call `getPayload()` on every field
+change instead of once on Save & Close), though the component tree and validation logic stay
+the same either way.
 
-```html
-<template lwc:if={isFixedOnly}>
-    <c-top-tail-durations ...></c-top-tail-durations>
-</template>
-```
+---
 
-## Data model notes
+## Data model
 
-All three components assume child objects, not fields on the proposal/campaign record:
+Per TTP section 6. All records are individual Linear Parameter records related to the Proposal
+(`Proposal ID` populated on the Proposal lookup field), five new `Type` values:
 
-- **Burst period**: `Name`, `Start_Date__c` (Date), `End_Date__c` (Date), parent lookup to the
-  proposal. The flight-bounds and overlap rules in `validate()` should also be enforced
-  server-side (a trigger/validation rule), since this component only guards the UI.
-- **Custom daypart**: `Name`, `Start_Time__c` (Time), `End_Time__c` (Time), parent lookup to the
-  proposal. Consider whether the standard dayparts (Peak/Off-Peak/Mid-Dawn) and these custom
-  entries should share one object with a `Is_Custom__c` flag, or stay as two separate structures
-  as the prototype has them (a flat picklist plus a child object): the combined validation rule
-  above needs to read both regardless of which shape is chosen.
-- **Top/tail set**: `Top_Duration__c`, `Middle_Duration__c` (nullable), `Tail_Duration__c`
-  (Numbers, seconds), parent lookup to the proposal. The `hasMid` flag can be derived from whether
-  `Middle_Duration__c` is populated rather than stored separately. The bookable-duration list
-  (`5, 6, 7, 8, 10, 15, 20, 30, 45, 60, 75, 90, 120, 180`) is business reference data shared with
-  the base duration picker: model it once (custom metadata is a good fit, per the same
-  recommendation already made for it in `docs/design-handoff/spot-timing-panel.md`), not as a literal
-  list duplicated in this component and in Apex.
+| Type | Produced by | Notes |
+| --- | --- | --- |
+| Single Duration | `spotDurationsAndDayparts.getPayload().durations` (entries with no `Top/` prefix) | One record per selected plain duration, e.g. `Duration Value = 10`. |
+| Combo Duration | same, entries with a `Top/` prefix | One record per Top/Tail or Top/Middle/Tail set; distinguished from Single Duration by `Middle Duration` being populated, not by a separate Type. `Top Duration`/`Middle Duration`/`Tail Duration` map directly from `topTailSets`. |
+| Burst Period | `burstsAndCustomDayparts.getPayload().bursts` | `Label`, `Start Date`, `End Date`. |
+| Standard Daypart | `spotDurationsAndDayparts.getPayload().dayparts` | One record per selected pill (Peak / Off-Peak / Mid-Dawn), external identifier from the proposed standard-daypart custom object (TTP section 7.1). |
+| Custom Daypart | `burstsAndCustomDayparts.getPayload().dayparts` | `Label`, `Start Time`, `End Time`. Also used for the Account-level default records (`AccountId__c` populated, Proposal ID blank), per TTP section 6.5. |
+
+`Start Date`, `End Date`, `Start Time`, and `End Time` are generic fields, not prefixed per
+Type, so they can be reused by future date-bound or time-bound Linear Parameter Types (the TTP
+gives exclusion periods as an example). None of the components above assume any particular field
+API name: the exact `__c` suffixes are an Apex/schema decision, not an LWC one.
+
+## What this delivers, and what it does not
+
+This is the LWC layer only: components, their contracts, and their client-side validation. Not
+included, and needed before any of this can go live:
+
+- The Apex service classes and the shared save trigger per page (TTP sections 4-5).
+- The selector that loads existing Linear Parameter records into the seed props on open.
+- The `DefaultExclusionService`-style copy-forward service for Custom Daypart Account defaults,
+  and the Apex call `burstsAndCustomDayparts`'s `updatedefaults` event should trigger.
+- The OMS push on save (TTP section 5): happens as part of the same save, not a separate sync.
+- The standard-daypart custom object proposed in TTP section 7.1.
+- Confirmation of the unconfirmed items already called out above: the duplicate Top/Tail
+  combination message, and the exact validation trigger point and message copy for "at least
+  one duration/daypart selected" on the Optimiser Inputs page.
 
 ## Running the tests
 
 ```bash
-cd sfdx-project
 npm install
 npm test
 ```
 
-15 tests pass as delivered (5 for `burstPeriods`, 4 for `customDayparts`, 6 for
-`topTailDurations`), covering rendering, event payloads, and the exact validation wording listed
-above.
+55 tests pass as delivered, covering rendering, event payloads, seed-once state, and every
+validation message quoted above.
